@@ -112,14 +112,36 @@ File: `sample_rule.json`
 
 ---
 
-## ✅ Resulting GRL Output
+## ✅ Resulting Output
 
 ```grl
-rule loyalty_discount_above_2000 "Apply 10% discount if user is a loyalty member and cart total > 2000" salience 10 {
+Loaded GRule:
+ rule CategoryMatchPromo "Give promo message if browsing Electronics or Home categories" salience 5 {
 	when
-		( Customer.IsLoyaltyProgramMember == true ) && ( Customer.CartTotal > 2000.00 )
+		( Customer.HasCategory(Customer.BrowsingCategories, "Electronics", "Home") )
+	then
+		Offer.PromoMessage = "Check out our Electronics & Home Deals!";
+		Retract("CategoryMatchPromo");
+}
+Loaded GRule:
+ rule ApplyDiscountIfCartTotalHigh "Apply 10% discount if cart total is greater than 1000" salience 10 {
+	when
+		( Customer.CartTotal > 1000.00 )
 	then
 		Offer.ApplyDiscountPercent = 10.00;
-		Offer.PromoMessage = "Congrats! You've unlocked a loyalty discount.";
+		Retract("ApplyDiscountIfCartTotalHigh");
 }
+Loaded GRule:
+ rule FreeShippingForLoyalCustomers "Give free shipping to loyalty program members" salience 8 {
+	when
+		( Customer.IsLoyaltyProgramMember == true )
+	then
+		Offer.FreeShipping = true;
+		Retract("FreeShippingForLoyalCustomers");
+}
+Matching Rule:  &{1742645379-94 ruleApplyDiscountIfCartTotalHigh"Apply 10% discount if cart total is greater than 1000"salience10{when(Customer.CartTotal>1000.00)thenOffer.ApplyDiscountPercent=10.00;Retract("ApplyDiscountIfCartTotalHigh");} ApplyDiscountIfCartTotalHigh Apply 10% discount if cart total is greater than 1000 10 0x140002758c0 0x140002758f0 false false}
+Matching Rule:  &{1742645379-121 ruleFreeShippingForLoyalCustomers"Give free shipping to loyalty program members"salience8{when(Customer.IsLoyaltyProgramMember==true)thenOffer.FreeShipping=true;Retract("FreeShippingForLoyalCustomers");} FreeShippingForLoyalCustomers Give free shipping to loyalty program members 8 0x14000275980 0x140002759b0 false false}
+Final Offer Applied: {ApplyDiscountPercent:10 ApplyFlatDiscount:0 ShowPromotionId: FreeShipping:true AssignCoupon: PromoMessage: AddLoyaltyPoints:0}
+Matching Rule:  &{1742645379-143 ruleCategoryMatchPromo"Give promo message if browsing Electronics or Home categories"salience5{when(Customer.HasCategory(Customer.BrowsingCategories,"Electronics","Home"))thenOffer.PromoMessage="Check out our Electronics & Home Deals!";Retract("CategoryMatchPromo");} CategoryMatchPromo Give promo message if browsing Electronics or Home categories 5 0x14000275a40 0x14000275a70 false false}
+Final Offer Applied: {ApplyDiscountPercent:0 ApplyFlatDiscount:0 ShowPromotionId: FreeShipping:false AssignCoupon: PromoMessage:Check out our Electronics & Home Deals! AddLoyaltyPoints:0}
 ```
