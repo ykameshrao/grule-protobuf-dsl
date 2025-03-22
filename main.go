@@ -83,17 +83,22 @@ func loadAllRulesFromDir(dir string) ([]*dsl.EcommerceOfferRule, error) {
 	return rules, err
 }
 
-func setupRuleEngine(grlRules []string) (*ast.KnowledgeBase, ast.IDataContext, *RuleContext, error) {
+func setupRuleEngine(grlRules []string) (*ast.KnowledgeBase, error) {
 	lib := ast.NewKnowledgeLibrary()
 	ruleBuilder := builder.NewRuleBuilder(lib)
 
 	for _, ruleStr := range grlRules {
 		err := ruleBuilder.BuildRuleFromResource("EcommerceOffersRuleEngine", "0.0.1", pkg.NewBytesResource([]byte(ruleStr)))
 		if err != nil {
-			return nil, nil, nil, err
+			return nil, err
 		}
 	}
 
+	kb, _ := lib.NewKnowledgeBaseInstance("EcommerceOffersRuleEngine", "0.0.1")
+	return kb, nil
+}
+
+func exampleOne() (ast.IDataContext, *RuleContext, error) {
 	// Prepare context
 	ruleCtx := &RuleContext{
 		Customer: Customer{
@@ -109,15 +114,36 @@ func setupRuleEngine(grlRules []string) (*ast.KnowledgeBase, ast.IDataContext, *
 	dc := ast.NewDataContext()
 	err := dc.Add("Customer", &ruleCtx.Customer)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 	err = dc.Add("Offer", &ruleCtx.Offer)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
+	return dc, ruleCtx, nil
+}
 
-	kb, _ := lib.NewKnowledgeBaseInstance("EcommerceOffersRuleEngine", "0.0.1")
-	return kb, dc, ruleCtx, nil
+func exampleTwo() (ast.IDataContext, *RuleContext, error) {
+	// Prepare context
+	ruleCtx := &RuleContext{
+		Customer: Customer{
+			Age:                     21,
+			BrowsingCategories:      []string{"Electronics", "Home"},
+			TotalSpent:              500,
+			SignupDaysAgo:           30,
+			HasRedeemedCouponBefore: false,
+		},
+	}
+	dc := ast.NewDataContext()
+	err := dc.Add("Customer", &ruleCtx.Customer)
+	if err != nil {
+		return nil, nil, err
+	}
+	err = dc.Add("Offer", &ruleCtx.Offer)
+	if err != nil {
+		return nil, nil, err
+	}
+	return dc, ruleCtx, nil
 }
 
 func main() {
@@ -139,14 +165,31 @@ func main() {
 	}
 
 	// Step 3: Load into engine and create context
-	kb, dc, ruleCtx, err := setupRuleEngine(grlRules)
+	kb, err := setupRuleEngine(grlRules)
 	if err != nil {
 		panic(err)
 	}
 
 	// Step 4: Evaluate
+	dc, ruleCtx, err := exampleOne()
 	e := engine.NewGruleEngine()
 	matchingRules, err := e.FetchMatchingRules(dc, kb)
+	if err != nil {
+		return
+	}
+	for _, rule := range matchingRules {
+		fmt.Println("Matching Rule: ", rule)
+	}
+	if err := e.Execute(dc, kb); err != nil {
+		panic(err)
+	}
+
+	// Step 5: Show result
+	fmt.Printf("Final Offer Applied: %+v\n", ruleCtx.Offer)
+
+	// Some More
+	dc, ruleCtx, err = exampleTwo()
+	matchingRules, err = e.FetchMatchingRules(dc, kb)
 	if err != nil {
 		return
 	}

@@ -113,8 +113,9 @@ func ToGRL(grule *GRuleEntity) string {
 		%s
 	then
 		%s
+		Retract("%s");
 }`,
-		grule.Name, grule.Description, grule.Salience, grule.When, strings.Join(grule.Then, "\n\t\t"))
+		grule.Name, grule.Description, grule.Salience, grule.When, strings.Join(grule.Then, "\n\t\t"), grule.Name)
 }
 
 // ToMultipleGRLs converts a slice of GRuleEntity to a GRL string
