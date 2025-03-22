@@ -30,11 +30,12 @@ func EcommerceOfferRuleToGRuleEntity(rule *dsl.EcommerceOfferRule) (*GRuleEntity
 			}
 			op := getEnumGrlOperator(expr.Operator)
 			field := getEnumGrlFieldName(expr.Input)
-			if expr.Operator == dsl.GRuleExpressionOperator_STRING_IN_FUNCTION {
+			if expr.Operator == dsl.GRuleExpressionOperator_HAS_CATEGORY_FUNCTION {
 				if val == "" {
-					return nil, fmt.Errorf("STRING_IN_FUNCTION used with empty list for field %s", field)
+					return nil, fmt.Errorf("HAS_CATEGORY_FUNCTION used with empty list for field %s", field)
 				}
-				exprStr := strings.Replace(fmt.Sprintf("%s%s", field, op), ":replace", val, 1)
+				opStr := strings.Replace(op, ":field", field, 1)
+				exprStr := strings.Replace(opStr, ":replace", val, 1)
 				expressions = append(expressions, fmt.Sprintf("( %s )", exprStr))
 			} else {
 				expressions = append(expressions, fmt.Sprintf("( %s%s%s )", field, op, val))

@@ -48,7 +48,7 @@ enum GRuleExpressionOperator {
   GREATER_THAN_EQUALS = 4 [(grl_operator) = " >= "];
   EQUALS = 5 [(grl_operator) = " == "];
   NOT_EQUALS = 6 [(grl_operator) = " != "];
-  STRING_IN_FUNCTION = 7 [(grl_operator) = ".In(:replace)"]; // Refer: https://github.com/hyperjumptech/grule-rule-engine/blob/master/docs/en/Function_en.md#stringinstring--bool
+  HAS_CATEGORY_FUNCTION = 7 [(grl_operator) = "Customer.HasCategory(:field, :replace)"]; // Refer: https://github.com/hyperjumptech/grule-rule-engine/blob/master/docs/en/Function_en.md#stringinstring--bool
 }
 
 // Operators used in the GRule conditions and expressions

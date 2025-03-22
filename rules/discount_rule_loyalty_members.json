@@ -1,0 +1,28 @@
+{
+  "name": "FreeShippingForLoyalCustomers",
+  "description": "Give free shipping to loyalty program members",
+  "salience": 8,
+  "conditions": [
+    {
+      "expressions": [
+        {
+          "input": "IS_LOYALTY_PROGRAM_MEMBER",
+          "operator": "EQUALS",
+          "value": {
+            "boolVal": true
+          }
+        }
+      ],
+      "expressionJoinOperator": "AND"
+    }
+  ],
+  "conditionJoinOperator": "AND",
+  "actions": [
+    {
+      "output": "FREE_SHIPPING",
+      "value": {
+        "boolVal": true
+      }
+    }
+  ]
+}

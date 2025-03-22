@@ -1,8 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
+	"google.golang.org/protobuf/encoding/protojson"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -36,6 +36,17 @@ type Customer struct {
 	SignupDaysAgo           int
 }
 
+func (c Customer) HasCategory(field []string, categories ...string) bool {
+	for _, input := range categories {
+		for _, existing := range field {
+			if input == existing {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 type Offer struct {
 	ApplyDiscountPercent float32
 	ApplyFlatDiscount    float32
@@ -62,21 +73,22 @@ func loadAllRulesFromDir(dir string) ([]*dsl.EcommerceOfferRule, error) {
 			return err
 		}
 		var rule dsl.EcommerceOfferRule
-		if err := json.Unmarshal(data, &rule); err != nil {
-			return err
-		}
+		err = protojson.UnmarshalOptions{
+			DiscardUnknown: true,
+			AllowPartial:   true,
+		}.Unmarshal(data, &rule)
 		rules = append(rules, &rule)
 		return nil
 	})
 	return rules, err
 }
 
-func setupRuleEngine(grlRules []string) (*ast.KnowledgeBase, *ast.DataContext, *RuleContext, error) {
+func setupRuleEngine(grlRules []string) (*ast.KnowledgeBase, ast.IDataContext, *RuleContext, error) {
 	lib := ast.NewKnowledgeLibrary()
-	builder := builder.NewRuleBuilder(lib)
+	ruleBuilder := builder.NewRuleBuilder(lib)
 
 	for _, ruleStr := range grlRules {
-		err := builder.BuildRuleFromResource("EcomRules", "0.0.1", pkg.NewBytesResource([]byte(ruleStr)))
+		err := ruleBuilder.BuildRuleFromResource("EcommerceOffersRuleEngine", "0.0.1", pkg.NewBytesResource([]byte(ruleStr)))
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -95,10 +107,16 @@ func setupRuleEngine(grlRules []string) (*ast.KnowledgeBase, *ast.DataContext, *
 		},
 	}
 	dc := ast.NewDataContext()
-	dc.Add("Customer", &ruleCtx.Customer)
-	dc.Add("Offer", &ruleCtx.Offer)
+	err := dc.Add("Customer", &ruleCtx.Customer)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	err = dc.Add("Offer", &ruleCtx.Offer)
+	if err != nil {
+		return nil, nil, nil, err
+	}
 
-	kb := lib.NewKnowledgeBaseInstance("EcomRules", "0.0.1")
+	kb, _ := lib.NewKnowledgeBaseInstance("EcommerceOffersRuleEngine", "0.0.1")
 	return kb, dc, ruleCtx, nil
 }
 
@@ -117,6 +135,7 @@ func main() {
 			panic(err)
 		}
 		grlRules = append(grlRules, grl.ToGRL(entity))
+		fmt.Println("grlRule:", grl.ToGRL(entity))
 	}
 
 	// Step 3: Load into engine and create context

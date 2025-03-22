@@ -1,0 +1,28 @@
+{
+  "name": "ApplyDiscountIfCartTotalHigh",
+  "description": "Apply 10% discount if cart total is greater than 1000",
+  "salience": 10,
+  "conditions": [
+    {
+      "expressions": [
+        {
+          "input": "CART_TOTAL",
+          "operator": "GREATER_THAN",
+          "value": {
+            "floatVal": 1000.0
+          }
+        }
+      ],
+      "expressionJoinOperator": "AND"
+    }
+  ],
+  "conditionJoinOperator": "AND",
+  "actions": [
+    {
+      "output": "APPLY_DISCOUNT_PERCENT",
+      "value": {
+        "floatVal": 10.0
+      }
+    }
+  ]
+}

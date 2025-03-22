@@ -140,6 +140,8 @@ func detectOperator(expr string) dsl.GRuleExpressionOperator {
 		return dsl.GRuleExpressionOperator_EQUALS
 	case strings.Contains(expr, " != "):
 		return dsl.GRuleExpressionOperator_NOT_EQUALS
+	case strings.Contains(expr, " Customer.HasCategory( "):
+		return dsl.GRuleExpressionOperator_HAS_CATEGORY_FUNCTION
 	default:
 		return dsl.GRuleExpressionOperator_EXPRESSION_OPERATOR_UNSPECIFIED
 	}

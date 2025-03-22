@@ -1,0 +1,28 @@
+{
+  "name": "CategoryMatchPromo",
+  "description": "Give promo message if browsing Electronics or Home categories",
+  "salience": 5,
+  "conditions": [
+    {
+      "expressions": [
+        {
+          "input": "BROWSING_CATEGORIES",
+          "operator": "HAS_CATEGORY_FUNCTION",
+          "value": {
+            "stringListCommaConcatenated": "Electronics,Home"
+          }
+        }
+      ],
+      "expressionJoinOperator": "AND"
+    }
+  ],
+  "conditionJoinOperator": "AND",
+  "actions": [
+    {
+      "output": "PROMO_MESSAGE",
+      "value": {
+        "stringVal": "Check out our Electronics & Home Deals!"
+      }
+    }
+  ]
+}

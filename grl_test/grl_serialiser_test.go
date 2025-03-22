@@ -104,7 +104,7 @@ func TestEcommerceOfferRuleToGRuleEntity_StringListValue(t *testing.T) {
 				Expressions: []*dsl.EcommerceOfferRule_Condition_Expression{
 					{
 						Input:    dsl.EcommerceOfferRule_Condition_PREFERRED_CATEGORIES,
-						Operator: dsl.GRuleExpressionOperator_STRING_IN_FUNCTION,
+						Operator: dsl.GRuleExpressionOperator_HAS_CATEGORY_FUNCTION,
 						Value: &dsl.RuleValue{
 							Value: &dsl.RuleValue_StringListCommaConcatenated{StringListCommaConcatenated: "Electronics, Home"},
 						},
@@ -125,7 +125,7 @@ func TestEcommerceOfferRuleToGRuleEntity_StringListValue(t *testing.T) {
 
 	entity, err := grl.EcommerceOfferRuleToGRuleEntity(rule)
 	assert.NoError(t, err)
-	assert.Contains(t, entity.When, "Customer.PreferredCategories.In(\"Electronics\", \"Home\")")
+	assert.Contains(t, entity.When, "Customer.HasCategory(Customer.PreferredCategories, \"Electronics\", \"Home\")")
 	assert.Contains(t, entity.Then[0], "Offer.PromoMessage = \"Special Deal!\";")
 }
 
@@ -212,7 +212,7 @@ func TestEcommerceOfferRuleToGRuleEntity_ComplexStringList(t *testing.T) {
 				Expressions: []*dsl.EcommerceOfferRule_Condition_Expression{
 					{
 						Input:    dsl.EcommerceOfferRule_Condition_BROWSING_CATEGORIES,
-						Operator: dsl.GRuleExpressionOperator_STRING_IN_FUNCTION,
+						Operator: dsl.GRuleExpressionOperator_HAS_CATEGORY_FUNCTION,
 						Value:    &dsl.RuleValue{Value: &dsl.RuleValue_StringListCommaConcatenated{StringListCommaConcatenated: "Books, Gadgets"}},
 					},
 				},
@@ -229,7 +229,7 @@ func TestEcommerceOfferRuleToGRuleEntity_ComplexStringList(t *testing.T) {
 
 	entity, err := grl.EcommerceOfferRuleToGRuleEntity(rule)
 	assert.NoError(t, err)
-	assert.Contains(t, entity.When, `Customer.BrowsingCategories.In("Books", "Gadgets")`)
+	assert.Contains(t, entity.When, `Customer.HasCategory(Customer.BrowsingCategories, "Books", "Gadgets")`)
 	assert.Contains(t, entity.Then[0], `Offer.AssignCoupon = "BOOKS10";`)
 }
 
@@ -243,14 +243,14 @@ func TestEcommerceOfferRuleToGRuleEntity_MultipleStringInFunctions(t *testing.T)
 				Expressions: []*dsl.EcommerceOfferRule_Condition_Expression{
 					{
 						Input:    dsl.EcommerceOfferRule_Condition_PREFERRED_CATEGORIES,
-						Operator: dsl.GRuleExpressionOperator_STRING_IN_FUNCTION,
+						Operator: dsl.GRuleExpressionOperator_HAS_CATEGORY_FUNCTION,
 						Value: &dsl.RuleValue{
 							Value: &dsl.RuleValue_StringListCommaConcatenated{StringListCommaConcatenated: "Electronics, Furniture"},
 						},
 					},
 					{
 						Input:    dsl.EcommerceOfferRule_Condition_BROWSING_CATEGORIES,
-						Operator: dsl.GRuleExpressionOperator_STRING_IN_FUNCTION,
+						Operator: dsl.GRuleExpressionOperator_HAS_CATEGORY_FUNCTION,
 						Value: &dsl.RuleValue{
 							Value: &dsl.RuleValue_StringListCommaConcatenated{StringListCommaConcatenated: "Books, Toys"},
 						},
@@ -271,8 +271,8 @@ func TestEcommerceOfferRuleToGRuleEntity_MultipleStringInFunctions(t *testing.T)
 
 	entity, err := grl.EcommerceOfferRuleToGRuleEntity(rule)
 	assert.NoError(t, err)
-	assert.Contains(t, entity.When, `Customer.PreferredCategories.In("Electronics", "Furniture")`)
-	assert.Contains(t, entity.When, `Customer.BrowsingCategories.In("Books", "Toys")`)
+	assert.Contains(t, entity.When, `Customer.HasCategory(Customer.PreferredCategories, "Electronics", "Furniture")`)
+	assert.Contains(t, entity.When, `Customer.HasCategory(Customer.BrowsingCategories, "Books", "Toys")`)
 	assert.Contains(t, entity.Then[0], `Offer.PromoMessage = "Combo Promo!";`)
 }
 
@@ -293,7 +293,7 @@ func TestEcommerceOfferRuleToGRuleEntity_StringInFunctionMixedWithOther(t *testi
 					},
 					{
 						Input:    dsl.EcommerceOfferRule_Condition_CART_CONTAINS_CATEGORIES,
-						Operator: dsl.GRuleExpressionOperator_STRING_IN_FUNCTION,
+						Operator: dsl.GRuleExpressionOperator_HAS_CATEGORY_FUNCTION,
 						Value: &dsl.RuleValue{
 							Value: &dsl.RuleValue_StringListCommaConcatenated{StringListCommaConcatenated: "Appliances"},
 						},
@@ -315,7 +315,7 @@ func TestEcommerceOfferRuleToGRuleEntity_StringInFunctionMixedWithOther(t *testi
 	entity, err := grl.EcommerceOfferRuleToGRuleEntity(rule)
 	assert.NoError(t, err)
 	assert.Contains(t, entity.When, `Customer.CartTotal >= 1500.00`)
-	assert.Contains(t, entity.When, `Customer.CartContainsCategories.In("Appliances")`)
+	assert.Contains(t, entity.When, `Customer.HasCategory(Customer.CartContainsCategories, "Appliances")`)
 	assert.Contains(t, entity.Then[0], `Offer.ApplyFlatDiscount = 300.00;`)
 }
 
@@ -329,7 +329,7 @@ func TestEcommerceOfferRuleToGRuleEntity_EmptyStringList(t *testing.T) {
 				Expressions: []*dsl.EcommerceOfferRule_Condition_Expression{
 					{
 						Input:    dsl.EcommerceOfferRule_Condition_CART_CONTAINS_CATEGORIES,
-						Operator: dsl.GRuleExpressionOperator_STRING_IN_FUNCTION,
+						Operator: dsl.GRuleExpressionOperator_HAS_CATEGORY_FUNCTION,
 						Value:    &dsl.RuleValue{Value: &dsl.RuleValue_StringListCommaConcatenated{StringListCommaConcatenated: ""}},
 					},
 				},
@@ -346,5 +346,5 @@ func TestEcommerceOfferRuleToGRuleEntity_EmptyStringList(t *testing.T) {
 
 	_, err := grl.EcommerceOfferRuleToGRuleEntity(rule)
 	assert.Error(t, err)
-	assert.Equal(t, `STRING_IN_FUNCTION used with empty list for field Customer.CartContainsCategories`, err.Error())
+	assert.Equal(t, `HAS_CATEGORY_FUNCTION used with empty list for field Customer.CartContainsCategories`, err.Error())
 }
