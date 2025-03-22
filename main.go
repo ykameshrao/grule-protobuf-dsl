@@ -135,7 +135,7 @@ func main() {
 			panic(err)
 		}
 		grlRules = append(grlRules, grl.ToGRL(entity))
-		fmt.Println("grlRule:", grl.ToGRL(entity))
+		fmt.Println("Loaded GRule:\n", grl.ToGRL(entity))
 	}
 
 	// Step 3: Load into engine and create context
@@ -146,6 +146,13 @@ func main() {
 
 	// Step 4: Evaluate
 	e := engine.NewGruleEngine()
+	matchingRules, err := e.FetchMatchingRules(dc, kb)
+	if err != nil {
+		return
+	}
+	for _, rule := range matchingRules {
+		fmt.Println("Matching Rule: ", rule)
+	}
 	if err := e.Execute(dc, kb); err != nil {
 		panic(err)
 	}
