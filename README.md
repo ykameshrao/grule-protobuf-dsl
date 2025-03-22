@@ -72,25 +72,52 @@ protoc \
 
 ## 📄 Sample JSON Rule
 
-File: `sample_rule.json`
+```json
+{
+  "name": "CategoryMatchPromo",
+  "description": "Give promo message if browsing Electronics or Home categories",
+  "salience": 5,
+  "conditions": [
+    {
+      "expressions": [
+        {
+          "input": "BROWSING_CATEGORIES",
+          "operator": "HAS_CATEGORY_FUNCTION",
+          "value": {
+            "stringListCommaConcatenated": "Electronics,Home"
+          }
+        }
+      ],
+      "expressionJoinOperator": "AND"
+    }
+  ],
+  "conditionJoinOperator": "AND",
+  "actions": [
+    {
+      "output": "PROMO_MESSAGE",
+      "value": {
+        "stringVal": "Check out our Electronics & Home Deals!"
+      }
+    }
+  ]
+}
+
+```
 
 ```json
 {
-  "name": "loyalty_discount_above_2000",
-  "description": "Apply 10% discount if user is a loyalty member and cart total > 2000",
+  "name": "ApplyDiscountIfCartTotalHigh",
+  "description": "Apply 10% discount if cart total is greater than 1000",
   "salience": 10,
   "conditions": [
     {
       "expressions": [
         {
-          "input": "IS_LOYALTY_PROGRAM_MEMBER",
-          "operator": "EQUALS",
-          "value": { "boolVal": true }
-        },
-        {
           "input": "CART_TOTAL",
           "operator": "GREATER_THAN",
-          "value": { "floatVal": 2000.0 }
+          "value": {
+            "floatVal": 1000.0
+          }
         }
       ],
       "expressionJoinOperator": "AND"
@@ -100,11 +127,9 @@ File: `sample_rule.json`
   "actions": [
     {
       "output": "APPLY_DISCOUNT_PERCENT",
-      "value": { "floatVal": 10.0 }
-    },
-    {
-      "output": "PROMO_MESSAGE",
-      "value": { "stringVal": "Congrats! You've unlocked a loyalty discount." }
+      "value": {
+        "floatVal": 10.0
+      }
     }
   ]
 }
