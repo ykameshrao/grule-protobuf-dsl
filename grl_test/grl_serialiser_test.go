@@ -232,3 +232,119 @@ func TestEcommerceOfferRuleToGRuleEntity_ComplexStringList(t *testing.T) {
 	assert.Contains(t, entity.When, `Customer.BrowsingCategories.In("Books", "Gadgets")`)
 	assert.Contains(t, entity.Then[0], `Offer.AssignCoupon = "BOOKS10";`)
 }
+
+func TestEcommerceOfferRuleToGRuleEntity_MultipleStringInFunctions(t *testing.T) {
+	rule := &dsl.EcommerceOfferRule{
+		Name:        "MultiCategoryMatch",
+		Description: "Match on both preferred and browsing categories",
+		Salience:    8,
+		Conditions: []*dsl.EcommerceOfferRule_Condition{
+			{
+				Expressions: []*dsl.EcommerceOfferRule_Condition_Expression{
+					{
+						Input:    dsl.EcommerceOfferRule_Condition_PREFERRED_CATEGORIES,
+						Operator: dsl.GRuleExpressionOperator_STRING_IN_FUNCTION,
+						Value: &dsl.RuleValue{
+							Value: &dsl.RuleValue_StringListCommaConcatenated{StringListCommaConcatenated: "Electronics, Furniture"},
+						},
+					},
+					{
+						Input:    dsl.EcommerceOfferRule_Condition_BROWSING_CATEGORIES,
+						Operator: dsl.GRuleExpressionOperator_STRING_IN_FUNCTION,
+						Value: &dsl.RuleValue{
+							Value: &dsl.RuleValue_StringListCommaConcatenated{StringListCommaConcatenated: "Books, Toys"},
+						},
+					},
+				},
+				ExpressionJoinOperator: dsl.GRuleJoinOperator_AND,
+			},
+		},
+		Actions: []*dsl.EcommerceOfferRule_Action{
+			{
+				Output: dsl.EcommerceOfferRule_Action_PROMO_MESSAGE,
+				Value: &dsl.RuleValue{
+					Value: &dsl.RuleValue_StringVal{StringVal: "Combo Promo!"},
+				},
+			},
+		},
+	}
+
+	entity, err := grl.EcommerceOfferRuleToGRuleEntity(rule)
+	assert.NoError(t, err)
+	assert.Contains(t, entity.When, `Customer.PreferredCategories.In("Electronics", "Furniture")`)
+	assert.Contains(t, entity.When, `Customer.BrowsingCategories.In("Books", "Toys")`)
+	assert.Contains(t, entity.Then[0], `Offer.PromoMessage = "Combo Promo!";`)
+}
+
+func TestEcommerceOfferRuleToGRuleEntity_StringInFunctionMixedWithOther(t *testing.T) {
+	rule := &dsl.EcommerceOfferRule{
+		Name:        "CategoryAndCartCombo",
+		Description: "Apply if cart total is high and categories match",
+		Salience:    11,
+		Conditions: []*dsl.EcommerceOfferRule_Condition{
+			{
+				Expressions: []*dsl.EcommerceOfferRule_Condition_Expression{
+					{
+						Input:    dsl.EcommerceOfferRule_Condition_CART_TOTAL,
+						Operator: dsl.GRuleExpressionOperator_GREATER_THAN_EQUALS,
+						Value: &dsl.RuleValue{
+							Value: &dsl.RuleValue_FloatVal{FloatVal: 1500},
+						},
+					},
+					{
+						Input:    dsl.EcommerceOfferRule_Condition_CART_CONTAINS_CATEGORIES,
+						Operator: dsl.GRuleExpressionOperator_STRING_IN_FUNCTION,
+						Value: &dsl.RuleValue{
+							Value: &dsl.RuleValue_StringListCommaConcatenated{StringListCommaConcatenated: "Appliances"},
+						},
+					},
+				},
+				ExpressionJoinOperator: dsl.GRuleJoinOperator_AND,
+			},
+		},
+		Actions: []*dsl.EcommerceOfferRule_Action{
+			{
+				Output: dsl.EcommerceOfferRule_Action_APPLY_FLAT_DISCOUNT,
+				Value: &dsl.RuleValue{
+					Value: &dsl.RuleValue_FloatVal{FloatVal: 300},
+				},
+			},
+		},
+	}
+
+	entity, err := grl.EcommerceOfferRuleToGRuleEntity(rule)
+	assert.NoError(t, err)
+	assert.Contains(t, entity.When, `Customer.CartTotal >= 1500.00`)
+	assert.Contains(t, entity.When, `Customer.CartContainsCategories.In("Appliances")`)
+	assert.Contains(t, entity.Then[0], `Offer.ApplyFlatDiscount = 300.00;`)
+}
+
+func TestEcommerceOfferRuleToGRuleEntity_EmptyStringList(t *testing.T) {
+	rule := &dsl.EcommerceOfferRule{
+		Name:        "EmptyCategoryCheck",
+		Description: "Should error or skip if no categories",
+		Salience:    4,
+		Conditions: []*dsl.EcommerceOfferRule_Condition{
+			{
+				Expressions: []*dsl.EcommerceOfferRule_Condition_Expression{
+					{
+						Input:    dsl.EcommerceOfferRule_Condition_CART_CONTAINS_CATEGORIES,
+						Operator: dsl.GRuleExpressionOperator_STRING_IN_FUNCTION,
+						Value:    &dsl.RuleValue{Value: &dsl.RuleValue_StringListCommaConcatenated{StringListCommaConcatenated: ""}},
+					},
+				},
+				ExpressionJoinOperator: dsl.GRuleJoinOperator_JOIN_OPERATOR_UNSPECIFIED,
+			},
+		},
+		Actions: []*dsl.EcommerceOfferRule_Action{
+			{
+				Output: dsl.EcommerceOfferRule_Action_SHOW_PROMOTION_ID,
+				Value:  &dsl.RuleValue{Value: &dsl.RuleValue_StringVal{StringVal: "EMPTYCAT"}},
+			},
+		},
+	}
+
+	_, err := grl.EcommerceOfferRuleToGRuleEntity(rule)
+	assert.Error(t, err)
+	assert.Equal(t, `STRING_IN_FUNCTION used with empty list for field Customer.CartContainsCategories`, err.Error())
+}

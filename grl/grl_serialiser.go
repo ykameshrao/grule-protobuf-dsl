@@ -31,6 +31,9 @@ func EcommerceOfferRuleToGRuleEntity(rule *dsl.EcommerceOfferRule) (*GRuleEntity
 			op := getEnumGrlOperator(expr.Operator)
 			field := getEnumGrlFieldName(expr.Input)
 			if expr.Operator == dsl.GRuleExpressionOperator_STRING_IN_FUNCTION {
+				if val == "" {
+					return nil, fmt.Errorf("STRING_IN_FUNCTION used with empty list for field %s", field)
+				}
 				exprStr := strings.Replace(fmt.Sprintf("%s%s", field, op), ":replace", val, 1)
 				expressions = append(expressions, fmt.Sprintf("( %s )", exprStr))
 			} else {
@@ -74,9 +77,12 @@ func getRuleValue(val *dsl.RuleValue) (string, error) {
 		return fmt.Sprintf("%.2f", v.FloatVal), nil
 	case *dsl.RuleValue_StringListCommaConcatenated:
 		elements := strings.Split(v.StringListCommaConcatenated, ",")
-		quoted := make([]string, len(elements))
-		for i, e := range elements {
-			quoted[i] = strconv.Quote(strings.TrimSpace(e))
+		quoted := make([]string, 0, len(elements))
+		for _, e := range elements {
+			e = strings.TrimSpace(e)
+			if e != "" {
+				quoted = append(quoted, strconv.Quote(e))
+			}
 		}
 		return strings.Join(quoted, ", "), nil
 	default:

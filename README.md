@@ -1,6 +1,6 @@
-# Ecommerce Offer Rules - GRL DSL System
+# Ecommerce Offer Rules - GRule Engine powered DSL System
 
-This module defines a rule-based Domain Specific Language (DSL) for managing conditional e-commerce offers. It includes:
+This module defines an example rule-based Domain Specific Language (DSL) powered by GRule for managing conditional e-commerce offers. It includes:
 
 - **Protobuf-based schema** (`EcommerceOfferRule`) to define offer logic.
 - **Go serializer** to convert the proto rule into [GRL](https://github.com/hyperjumptech/grule-rule-engine) compatible format.
