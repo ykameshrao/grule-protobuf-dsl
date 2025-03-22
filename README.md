@@ -1,5 +1,7 @@
 # Ecommerce Offer Rules - GRule Engine powered DSL System
 
+Related blog post: https://www.ykameshrao.com/post/building-dsls-in-golang-using-grule-and-protobuf
+
 This module defines an example rule-based Domain Specific Language (DSL) powered by GRule for managing conditional e-commerce offers. It includes:
 
 - **Protobuf-based schema** (`EcommerceOfferRule`) to define offer logic.
