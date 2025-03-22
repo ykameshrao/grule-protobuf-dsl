@@ -1,0 +1,33 @@
+{
+  "name": "loyalty_discount_above_2000",
+  "description": "Apply 10% discount if user is a loyalty member and cart total > 2000",
+  "salience": 10,
+  "conditions": [
+    {
+      "expressions": [
+        {
+          "input": "IS_LOYALTY_PROGRAM_MEMBER",
+          "operator": "EQUALS",
+          "value": { "boolVal": true }
+        },
+        {
+          "input": "CART_TOTAL",
+          "operator": "GREATER_THAN",
+          "value": { "floatVal": 2000.0 }
+        }
+      ],
+      "expressionJoinOperator": "AND"
+    }
+  ],
+  "conditionJoinOperator": "AND",
+  "actions": [
+    {
+      "output": "APPLY_DISCOUNT_PERCENT",
+      "value": { "floatVal": 10.0 }
+    },
+    {
+      "output": "PROMO_MESSAGE",
+      "value": { "stringVal": "Congrats! You've unlocked a loyalty discount." }
+    }
+  ]
+}

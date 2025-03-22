@@ -1,0 +1,23 @@
+{
+  "name": "HighCartValueDiscount",
+  "description": "Give 15% discount for carts > 1000",
+  "salience": 5,
+  "conditions": [
+    {
+      "expressions": [
+        {
+          "input": "CART_TOTAL",
+          "operator": "GREATER_THAN",
+          "value": { "floatVal": 1000.0 }
+        }
+      ],
+      "expressionJoinOperator": "AND"
+    }
+  ],
+  "actions": [
+    {
+      "output": "APPLY_DISCOUNT_PERCENT",
+      "value": { "floatVal": 15.0 }
+    }
+  ]
+}

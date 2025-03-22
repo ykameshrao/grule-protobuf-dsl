@@ -1,0 +1,143 @@
+syntax = "proto3";
+
+package ecommerce.v1.rules;
+
+import "google/protobuf/descriptor.proto";
+
+option go_package = "../dsl;dsl";
+
+// DSL metadata
+extend google.protobuf.EnumValueOptions {
+  string grl_field_name = 1001;
+  FieldType grl_field_type = 1002;
+  string grl_operator = 1003;
+}
+
+// Represents the types for the fields accepted in the input and
+// output of the GRules. We are supporting primitive field types only.
+enum FieldType {
+  FIELD_TYPE_UNSPECIFIED = 0;
+  STRING = 1;
+  BOOL = 2;
+  INTEGER = 3;
+  LONG = 4;
+  FLOAT = 5;
+  DOUBLE = 6;
+  STRING_LIST = 7;
+}
+
+// Represents the types for the values accepted as values in the conditions
+// to be tested for the various conditions.
+enum ValueType {
+  VALUE_TYPE_UNSPECIFIED = 0;
+  STRING_VAL = 1;
+  BOOL_VAL = 2;
+  INTEGER_VAL = 3;
+  LONG_VAL = 4;
+  FLOAT_VAL = 5;
+  DOUBLE_VAL = 6;
+  STRING_LIST_VAL = 7;
+}
+
+// Operators used in the GRule expressions.
+enum GRuleExpressionOperator {
+  EXPRESSION_OPERATOR_UNSPECIFIED = 0 [(grl_operator) = " unspecified "];
+  LESS_THAN = 1 [(grl_operator) = " < "];
+  LESS_THAN_EQUALS = 2 [(grl_operator) = " <= "];
+  GREATER_THAN = 3 [(grl_operator) = " > "];
+  GREATER_THAN_EQUALS = 4 [(grl_operator) = " >= "];
+  EQUALS = 5 [(grl_operator) = " == "];
+  NOT_EQUALS = 6 [(grl_operator) = " != "];
+  STRING_IN_FUNCTION = 7 [(grl_operator) = ".In(:replace)"]; // Refer: https://github.com/hyperjumptech/grule-rule-engine/blob/master/docs/en/Function_en.md#stringinstring--bool
+}
+
+// Operators used in the GRule conditions and expressions
+// to join multiple conditions or expressions.
+enum GRuleJoinOperator {
+  JOIN_OPERATOR_UNSPECIFIED = 0 [(grl_operator) = " unspecified "];
+  AND = 1 [(grl_operator) = " && "];
+  OR = 2 [(grl_operator) = " || "];
+}
+
+
+message RuleValue {
+  oneof value {
+    string string_val = 1;
+    bool bool_val = 2;
+    int32 int_val = 3;
+    float float_val = 4;
+    string string_list_comma_concatenated = 5;
+  }
+}
+
+// Ecommerce offer rule.
+message EcommerceOfferRule {
+  // Name of the rule.
+  string name = 1;
+  // Description of the rule.
+  string description = 2;
+  // Salience of the rule used in GRule.
+  uint32 salience = 3;
+
+  // Conditions to be tested for the rule.
+  message Condition {
+    // Represents the input field to be tested.
+    enum InputField {
+      AGE = 0 [(grl_field_name) = "Customer.Age", (grl_field_type) = INTEGER];
+      GENDER = 1 [(grl_field_name) = "Customer.Gender", (grl_field_type) = STRING];
+      LOCATION = 2 [(grl_field_name) = "Customer.Location", (grl_field_type) = STRING];
+      DEVICE_TYPE = 3 [(grl_field_name) = "Customer.DeviceType", (grl_field_type) = STRING];
+      IS_LOYALTY_PROGRAM_MEMBER = 4 [(grl_field_name) = "Customer.IsLoyaltyProgramMember", (grl_field_type) = BOOL];
+      TOTAL_LIFETIME_SPENT = 5 [(grl_field_name) = "Customer.TotalSpent", (grl_field_type) = FLOAT];
+      AVG_ORDER_VALUE = 6 [(grl_field_name) = "Customer.AvgOrderValue", (grl_field_type) = FLOAT];
+      LAST_PURCHASE_DAYS_AGO = 7 [(grl_field_name) = "Customer.LastPurchaseDaysAgo", (grl_field_type) = INTEGER];
+      LAST_CATEGORY_PURCHASED = 8 [(grl_field_name) = "Customer.LastCategoryPurchased", (grl_field_type) = STRING];
+      PREFERRED_CATEGORIES = 9 [(grl_field_name) = "Customer.PreferredCategories", (grl_field_type) = STRING_LIST];
+      CART_TOTAL = 10 [(grl_field_name) = "Customer.CartTotal", (grl_field_type) = FLOAT];
+      CART_CONTAINS_CATEGORIES = 11 [(grl_field_name) = "Customer.CartContainsCategories", (grl_field_type) = STRING_LIST];
+      BROWSING_CATEGORIES = 12 [(grl_field_name) = "Customer.BrowsingCategories", (grl_field_type) = STRING_LIST];
+      PURCHASE_COUNT_LAST_30_DAYS = 13 [(grl_field_name) = "Customer.PurchaseCount30d", (grl_field_type) = INTEGER];
+      RETURN_RATE_PERCENT = 14 [(grl_field_name) = "Customer.ReturnRatePercent", (grl_field_type) = FLOAT];
+      HAS_COUPON_REDEEMED_BEFORE = 15 [(grl_field_name) = "Customer.HasRedeemedCouponBefore", (grl_field_type) = BOOL];
+      SIGNUP_DAYS_AGO = 16 [(grl_field_name) = "Customer.SignupDaysAgo", (grl_field_type) = INTEGER];
+    }
+
+    // Represents the operator to be used in the expression.
+    message Expression {
+      InputField input = 1;
+      GRuleExpressionOperator operator = 2;
+      RuleValue value = 3;
+    }
+
+    // Represents the conditions to be tested.
+    repeated Expression expressions = 1;
+    // Represents the operator to join multiple expressions.
+    GRuleJoinOperator expression_join_operator = 2;
+  }
+
+  // Represents the operator to join multiple conditions.
+  repeated Condition conditions = 4;
+  // Represents the operator to join multiple conditions.
+  GRuleJoinOperator condition_join_operator = 5;
+
+  // Actions to be performed if the conditions are met.
+  message Action {
+    enum OutputField {
+      APPLY_DISCOUNT_PERCENT = 0 [(grl_field_name) = "Offer.ApplyDiscountPercent", (grl_field_type) = FLOAT];
+      APPLY_FLAT_DISCOUNT = 1 [(grl_field_name) = "Offer.ApplyFlatDiscount", (grl_field_type) = FLOAT];
+      SHOW_PROMOTION_ID = 2 [(grl_field_name) = "Offer.ShowPromotionId", (grl_field_type) = STRING];
+      FREE_SHIPPING = 3 [(grl_field_name) = "Offer.FreeShipping", (grl_field_type) = BOOL];
+      ASSIGN_COUPON_CODE = 4 [(grl_field_name) = "Offer.AssignCoupon", (grl_field_type) = STRING];
+      PROMO_MESSAGE = 5 [(grl_field_name) = "Offer.PromoMessage", (grl_field_type) = STRING];
+      ADD_LOYALTY_POINTS = 6 [(grl_field_name) = "Offer.AddLoyaltyPoints", (grl_field_type) = INTEGER];
+    }
+
+    // Represents the action to be performed.
+    OutputField output = 1;
+    // Represents the value to be set for the action.
+    RuleValue value = 2;
+  }
+
+  // Represents the actions to be performed.
+  repeated Action actions = 6;
+}
